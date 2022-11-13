@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "client",
+    "json_types",
+]
