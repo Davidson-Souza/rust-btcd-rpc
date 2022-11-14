@@ -4,10 +4,11 @@ use json_types::general::*;
 use json_types::transaction::BestBlock;
 use json_types::{
     self,
-    blockchain::GetUtreexoProofResult,
     transaction::{DecodeRawTransactionResult, Outpoint, Recipient},
 };
 
+#[cfg(feature = "utreexod")]
+use json_types::blockchain::GetUtreexoProofResult;
 use jsonrpc::{self, Client};
 use serde_json::{from_value, Value};
 

@@ -3,4 +3,5 @@
 members = [
     "client",
     "json_types",
+    "rust-jsonrpc"
 ]
