@@ -4,8 +4,10 @@ use json_types::general::*;
 use json_types::transaction::BestBlock;
 use json_types::{
     self,
+    blockchain::GetUtreexoProofResult,
     transaction::{DecodeRawTransactionResult, Outpoint, Recipient},
 };
+
 use jsonrpc::{self, Client};
 use serde_json::{from_value, Value};
 
@@ -104,7 +106,7 @@ pub trait BtcdRpc {
     /// // This is a signet block
     /// // assert!(client.getblockhash(0).unwrap(), String::from("00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6"));
     /// ```
-    fn getutreexoproof(&self, hash: String) -> Result<String> {
+    fn getutreexoproof(&self, hash: String) -> Result<GetUtreexoProofResult> {
         let hash = Value::from(hash);
         self.call("getutreexoproof", &[hash])
     }
