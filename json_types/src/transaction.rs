@@ -64,17 +64,17 @@ pub struct RawTxIn {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DecodedScriptPubkey {
     /// Disassembly of the script
-    asm: String,
+    pub asm: String,
     /// Hex-encoded bytes of the script
-    hex: String,
+    pub hex: String,
     /// The number of required signatures
     #[serde(rename = "reqSigs")]
-    req_sigs: Option<u32>,
+    pub req_sigs: Option<u32>,
     /// The type of the script (e.g. 'pubkeyhash')
     #[serde(rename = "type")]
-    script_type: String,
+    pub script_type: String,
     /// The bitcoin addresses associated with this script
-    addresses: Option<Vec<String>>,
+    pub addresses: Option<Vec<String>>,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ParsedTxOut {
@@ -103,6 +103,6 @@ pub struct DecodeRawTransactionResult {
 /// height.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BestBlock {
-    height: u64,
-    hash: String,
+    pub height: u64,
+    pub hash: String,
 }
