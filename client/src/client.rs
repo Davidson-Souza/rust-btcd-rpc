@@ -1,5 +1,6 @@
 use crate::error::UtreexodError;
 
+use json_types::blockchain::GetBlockResult;
 use json_types::general::*;
 use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult, VerbosityOutput};
 use json_types::{
@@ -216,6 +217,22 @@ pub trait BtcdRpc {
             false => {
                 let verbosity = serde_json::to_value(0)?;
                 let rpc_res = self.call("getrawtransaction", &[transaction_hash, verbosity])?;
+                Ok(VerbosityOutput::Simple(rpc_res))
+            }
+        }
+    }
+    /// Returns a block, given it's hash
+    fn getblock(&self, hash: String, verbosity: bool) -> Result<VerbosityOutput<GetBlockResult>> {
+        let hash = serde_json::to_value(hash)?;
+        match verbosity {
+            true => {
+                let verbosity = serde_json::to_value(1)?;
+                let rpc_res = self.call("getblock", &[hash, verbosity])?;
+                Ok(VerbosityOutput::Verbose(rpc_res))
+            }
+            false => {
+                let verbosity = serde_json::to_value(0)?;
+                let rpc_res = self.call("getblock", &[hash, verbosity])?;
                 Ok(VerbosityOutput::Simple(rpc_res))
             }
         }
