@@ -47,13 +47,13 @@ pub struct ParsedScriptSig {
 /// Returned by decoderawtransaction
 pub struct RawTxIn {
     pub coinbase: Option<String>,
-    pub txid: String,
-    pub vout: u64,
+    pub txid: Option<String>,
+    pub vout: Option<u64>,
     #[serde(rename = "scriptSig")]
-    pub script_sig: ParsedScriptSig,
+    pub script_sig: Option<ParsedScriptSig>,
     pub sequence: u64,
     #[serde(rename = "txinwitness")]
-    pub tx_in_witness: Vec<String>,
+    pub tx_in_witness: Option<Vec<String>>,
 }
 
 /// How we return a scriptPubKey in a input. The script is returned both in asm and hex-encoded
@@ -77,7 +77,7 @@ pub struct DecodedScriptPubkey {
     pub addresses: Option<Vec<String>>,
 }
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ParsedTxOut {
+pub struct RawTxOut {
     pub value: f64,
     #[serde(rename = "n")]
     pub index: u64,
@@ -96,9 +96,47 @@ pub struct DecodeRawTransactionResult {
     /// All transaction's inputs
     pub vin: Vec<RawTxIn>,
     /// All transaction's outputs
-    pub vout: Vec<ParsedTxOut>,
+    pub vout: Vec<RawTxOut>,
+}
+#[derive(Debug)]
+pub enum VerbosityOutput<T> {
+    /// Only a hex-encoded result
+    Simple(String),
+    /// A full output represented as [T]
+    Verbose(T),
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerboseGetRawTransactionResult {
+    /// Hex-encoded transaction
+    hex: String,
+    /// The serialized transaction hash without witness
+    txid: String,
+    /// The serialized transaction hash with witness (wtxid)
+    hash: String,
+    /// The serialized size, in bytes
+    size: u64,
+    /// The serialized size in vBytes
+    vsize: u64,
+    /// The transaction weight (between vsize*4-3 and vsize*4)
+    weight: u64,
+    /// The transaction version
+    version: u32,
+    /// The transaction lock time
+    locktime: u32,
+    /// The transaction inputs
+    vin: Vec<RawTxIn>,
+    /// The transaction outputs
+    vout: Vec<RawTxOut>,
+    /// The hash of the block this transaction have been confirmed in
+    blockhash: Option<String>,
+    /// The number of blocks after this transaction was included in the chain tip
+    confirmations: Option<u32>,
+    /// The transaction time
+    time: Option<u32>,
+    /// The block time
+    blocktime: Option<u32>,
+}
 /// A pair of values referencing the best known block. It contains both a hash and
 /// height.
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use crate::error::UtreexodError;
 
 use json_types::general::*;
-use json_types::transaction::BestBlock;
+use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult, VerbosityOutput};
 use json_types::{
     self,
     transaction::{DecodeRawTransactionResult, Outpoint, Recipient},
@@ -27,7 +27,7 @@ impl BTCDClient {
         let req = self.0.build_request(&cmd, &raw_args);
         // Sends it and collects the response in `resp`
         let resp = self.0.send_request(req)?;
-
+        println!("{:?}", resp);
         Ok(serde_json::from_str::<T>(
             resp.result.unwrap_or_default().get(),
         )?)
@@ -191,6 +191,35 @@ pub trait BtcdRpc {
         let rawtx = serde_json::to_value(rawtx)?;
         self.call("sendrawtransaction", &[rawtx])
     }
+    /// Estimates the required fee for a given expected confirmation time, in blocks
+    fn estimatefee(&self, blocks: u32) -> Result<f64> {
+        let blocks = serde_json::to_value(blocks)?;
+        self.call("estimatefee", &[blocks])
+    }
+    /// Returns the raw transaction, given it's hash
+    /// The verbosity level determines which information is returned. True means all transaction
+    /// data plus some additional information, like hash and data of the block this transaction got included.
+    /// False only returns a hex-encoded transaction.
+    fn getrawtransaction(
+        &self,
+        transaction_hash: String,
+        verbosity: bool,
+    ) -> Result<VerbosityOutput<VerboseGetRawTransactionResult>> {
+        let transaction_hash = serde_json::to_value(transaction_hash)?;
+
+        match verbosity {
+            true => {
+                let verbosity = serde_json::to_value(1)?;
+                let rpc_res = self.call("getrawtransaction", &[transaction_hash, verbosity])?;
+                Ok(VerbosityOutput::Verbose(rpc_res))
+            }
+            false => {
+                let verbosity = serde_json::to_value(0)?;
+                let rpc_res = self.call("getrawtransaction", &[transaction_hash, verbosity])?;
+                Ok(VerbosityOutput::Simple(rpc_res))
+            }
+        }
+    }
 }
 impl BtcdRpc for BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(
@@ -252,11 +281,9 @@ pub enum Network {
 }
 #[cfg(test)]
 mod test {
-    use crate::client::BTCDConfigs;
-
     #[test]
     fn test_basic_command() {
-        use super::{BTCDClient, BtcdRpc};
+        use super::{BTCDClient, BTCDConfigs, BtcdRpc};
         let config = BTCDConfigs::new(
             false,
             Some("SomeUsername".into()),
@@ -272,7 +299,7 @@ mod test {
     }
     #[test]
     fn test_get_block_hash() {
-        use super::{BTCDClient, BtcdRpc};
+        use super::{BTCDClient, BTCDConfigs, BtcdRpc};
         let config = BTCDConfigs::new(
             false,
             Some("SomeUsername".into()),
@@ -290,7 +317,7 @@ mod test {
     }
     #[test]
     fn test_decoderawtransaction() {
-        use super::{BTCDClient, BtcdRpc};
+        use super::{BTCDClient, BTCDConfigs, BtcdRpc};
 
         let config = BTCDConfigs::new(
             false,
