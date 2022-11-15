@@ -186,6 +186,11 @@ pub trait BtcdRpc {
     fn getblockcount(&self) -> Result<usize> {
         self.call("getblockcount", &[])
     }
+    /// Broadcast a hex-encoded transaction to the network
+    fn sendrawtransaction(&self, rawtx: String) -> Result<()> {
+        let rawtx = serde_json::to_value(rawtx)?;
+        self.call("sendrawtransaction", &[rawtx])
+    }
 }
 impl BtcdRpc for BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(
