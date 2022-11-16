@@ -1,6 +1,6 @@
 pub mod client;
 pub mod error;
-
+pub use json_types;
 /// Some RPCs requires a given block, usually as a hash. But we might only have a height.
 /// In order to save some time while programming, instead of asking for a hash and then
 /// asking what you need, this API allows asking by hash or by height, and we take care
