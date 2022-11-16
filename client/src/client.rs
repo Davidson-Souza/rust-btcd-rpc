@@ -1,5 +1,4 @@
 use crate::error::UtreexodError;
-
 use json_types::blockchain::GetBlockResult;
 use json_types::general::*;
 use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult, VerbosityOutput};
@@ -28,7 +27,6 @@ impl BTCDClient {
         let req = self.0.build_request(&cmd, &raw_args);
         // Sends it and collects the response in `resp`
         let resp = self.0.send_request(req)?;
-        println!("{:?}", resp);
         Ok(serde_json::from_str::<T>(
             resp.result.unwrap_or_default().get(),
         )?)
