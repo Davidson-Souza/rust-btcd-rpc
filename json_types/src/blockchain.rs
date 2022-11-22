@@ -26,3 +26,20 @@ pub struct GetBlockResult {
     previousblockhash: String,
     nextblockhash: Option<String>,
 }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetBlockHeaderResult {
+    hash: String,
+    confirmations: u32,
+    height: u32,
+    version: u32,
+    #[serde(rename = "versionHex")]
+    version_hex: String,
+    #[serde(rename = "merkleroot")]
+    merkle_root: String,
+    time: u32,
+    nonce: u32,
+    bits: String,
+    difficulty: u32,
+    previousblockhash: String,
+    nextblockhash: String,
+}

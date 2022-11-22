@@ -1,17 +1,17 @@
 use crate::error::UtreexodError;
-use json_types::blockchain::GetBlockResult;
-use json_types::general::*;
-use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult, VerbosityOutput};
+use crate::impl_verbosity;
+use json_types::blockchain::{GetBlockHeaderResult, GetBlockResult};
+use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult};
 use json_types::{
     self,
     transaction::{DecodeRawTransactionResult, Outpoint, Recipient},
 };
+use json_types::{general::*, VerbosityOutput};
 
 #[cfg(feature = "utreexod")]
 use json_types::blockchain::GetUtreexoProofResult;
 use jsonrpc::{self, Client};
 use serde_json::{from_value, Value};
-
 pub struct BTCDClient(Client);
 
 impl BTCDClient {
@@ -206,35 +206,24 @@ pub trait BtcdRpc {
     ) -> Result<VerbosityOutput<VerboseGetRawTransactionResult>> {
         let transaction_hash = serde_json::to_value(transaction_hash)?;
 
-        match verbosity {
-            true => {
-                let verbosity = serde_json::to_value(1)?;
-                let rpc_res = self.call("getrawtransaction", &[transaction_hash, verbosity])?;
-                Ok(VerbosityOutput::Verbose(rpc_res))
-            }
-            false => {
-                let verbosity = serde_json::to_value(0)?;
-                let rpc_res = self.call("getrawtransaction", &[transaction_hash, verbosity])?;
-                Ok(VerbosityOutput::Simple(rpc_res))
-            }
-        }
+        impl_verbosity!(self, "getrawtransaction", transaction_hash, verbosity)
     }
     /// Returns a block, given it's hash
     fn getblock(&self, hash: String, verbosity: bool) -> Result<VerbosityOutput<GetBlockResult>> {
         let hash = serde_json::to_value(hash)?;
-        match verbosity {
-            true => {
-                let verbosity = serde_json::to_value(1)?;
-                let rpc_res = self.call("getblock", &[hash, verbosity])?;
-                Ok(VerbosityOutput::Verbose(rpc_res))
-            }
-            false => {
-                let verbosity = serde_json::to_value(0)?;
-                let rpc_res = self.call("getblock", &[hash, verbosity])?;
-                Ok(VerbosityOutput::Simple(rpc_res))
-            }
-        }
+        impl_verbosity!(self, "getblock", hash, verbosity)
+
     }
+    /// Returns the block's header
+    fn getblockheader(
+        &self,
+        hash: String,
+        verbosity: bool,
+    ) -> Result<VerbosityOutput<GetBlockHeaderResult>> {
+        let hash = serde_json::to_value(hash)?;
+        impl_verbosity!(self, "getblockheader", hash, verbosity)
+    }
+
 }
 impl BtcdRpc for BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(
