@@ -11,3 +11,21 @@ pub enum QueryBlock {
     /// This means: "I'm referencing block whose hash is Y"
     ByHash(String),
 }
+
+#[macro_export]
+macro_rules! impl_verbosity {
+    ( $self: ident, $cmd: literal, $params: expr, $verbosity: ident ) => {
+        match $verbosity {
+            true => {
+                let verbosity = serde_json::to_value(1)?;
+                let rpc_res = $self.call($cmd, &[$params, verbosity])?;
+                Ok(VerbosityOutput::Verbose(rpc_res))
+            }
+            false => {
+                let verbosity = serde_json::to_value(0)?;
+                let rpc_res = $self.call($cmd, &[$params, verbosity])?;
+                Ok(VerbosityOutput::Simple(rpc_res))
+            }
+        }
+    };
+}
