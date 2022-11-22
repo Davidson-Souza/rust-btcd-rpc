@@ -98,13 +98,6 @@ pub struct DecodeRawTransactionResult {
     /// All transaction's outputs
     pub vout: Vec<RawTxOut>,
 }
-#[derive(Debug)]
-pub enum VerbosityOutput<T> {
-    /// Only a hex-encoded result
-    Simple(String),
-    /// A full output represented as [T]
-    Verbose(T),
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VerboseGetRawTransactionResult {
