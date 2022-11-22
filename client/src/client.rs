@@ -1,5 +1,5 @@
 use crate::error::UtreexodError;
-use crate::impl_verbosity;
+use crate::{impl_verbosity_bool, impl_verbosity_level};
 use json_types::blockchain::{GetBlockHeaderResult, GetBlockResult};
 use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult};
 use json_types::{
@@ -206,13 +206,12 @@ pub trait BtcdRpc {
     ) -> Result<VerbosityOutput<VerboseGetRawTransactionResult>> {
         let transaction_hash = serde_json::to_value(transaction_hash)?;
 
-        impl_verbosity!(self, "getrawtransaction", transaction_hash, verbosity)
+        impl_verbosity_level!(self, "getrawtransaction", transaction_hash, verbosity)
     }
     /// Returns a block, given it's hash
     fn getblock(&self, hash: String, verbosity: bool) -> Result<VerbosityOutput<GetBlockResult>> {
         let hash = serde_json::to_value(hash)?;
-        impl_verbosity!(self, "getblock", hash, verbosity)
-
+        impl_verbosity_level!(self, "getblock", hash, verbosity)
     }
     /// Returns the block's header
     fn getblockheader(
@@ -221,9 +220,8 @@ pub trait BtcdRpc {
         verbosity: bool,
     ) -> Result<VerbosityOutput<GetBlockHeaderResult>> {
         let hash = serde_json::to_value(hash)?;
-        impl_verbosity!(self, "getblockheader", hash, verbosity)
+        impl_verbosity_bool!(self, "getblockheader", hash, verbosity)
     }
-
 }
 impl BtcdRpc for BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(

@@ -27,3 +27,4 @@ impl<T> VerbosityOutput<T> {
         }
     }
 }
+

@@ -13,8 +13,25 @@ pub enum QueryBlock {
 }
 
 #[macro_export]
-macro_rules! impl_verbosity {
-    ( $self: ident, $cmd: literal, $params: expr, $verbosity: ident ) => {
+macro_rules! impl_verbosity_bool {
+    ($self: ident, $cmd: literal, $params: expr, $verbosity: ident) => {
+        match $verbosity {
+            true => {
+                let verbosity = serde_json::to_value(true)?;
+                let rpc_res = $self.call($cmd, &[$params, verbosity])?;
+                Ok(VerbosityOutput::Verbose(rpc_res))
+            }
+            false => {
+                let verbosity = serde_json::to_value(false)?;
+                let rpc_res = $self.call($cmd, &[$params, verbosity])?;
+                Ok(VerbosityOutput::Simple(rpc_res))
+            }
+        }
+    };
+}
+#[macro_export]
+macro_rules! impl_verbosity_level {
+    ($self: ident, $cmd: literal, $params: expr, $verbosity: ident) => {
         match $verbosity {
             true => {
                 let verbosity = serde_json::to_value(1)?;

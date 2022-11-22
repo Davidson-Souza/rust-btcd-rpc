@@ -39,7 +39,7 @@ pub struct GetBlockHeaderResult {
     time: u32,
     nonce: u32,
     bits: String,
-    difficulty: u32,
+    difficulty: f32,
     previousblockhash: String,
-    nextblockhash: String,
+    nextblockhash: Option<String>,
 }
