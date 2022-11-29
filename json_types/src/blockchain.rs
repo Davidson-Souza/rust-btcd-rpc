@@ -9,7 +9,6 @@ pub struct GetUtreexoProofResult {
     #[serde(rename = "targetpreimages")]
     pub target_preimages: Vec<String>,
     pub prooftargets: Vec<u64>,
-    pub hex: String,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetBlockResult {
