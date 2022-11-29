@@ -109,9 +109,9 @@ pub trait BtcdRpc {
     /// // This is a signet block
     /// // assert!(client.getblockhash(0).unwrap(), String::from("00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6"));
     /// ```
-    fn getutreexoproof(&self, hash: String) -> Result<GetUtreexoProofResult> {
+    fn getutreexoproof(&self, hash: String, verbosity: bool) -> Result<VerbosityOutput<GetUtreexoProofResult>> {
         let hash = Value::from(hash);
-        self.call("getutreexoproof", &[hash])
+        impl_verbosity_level!(self, "getutreexoproof", hash, verbosity)
     }
     /// This command is useful for managing peers in your node. You can add, remove or list
     /// manually added peers. Note that added peers have different rules than automatic ones,
@@ -349,7 +349,7 @@ mod test {
     #[cfg(feature = "utreexod")]
     #[test]
     fn test_getutreexoproof() {
-        use super::{BTCDClient, BtcdRpc};
+        use super::{BTCDClient, BtcdRpc, BTCDConfigs};
 
         let config = BTCDConfigs::new(
             false,
@@ -361,7 +361,7 @@ mod test {
 
         let client = BTCDClient::new(config).unwrap();
         let hash = client.getblockhash(10);
-        let proof = client.getutreexoproof(hash.unwrap());
+        let proof = client.getutreexoproof(hash.unwrap(), true);
         assert!(proof.is_ok())
     }
     #[test]
