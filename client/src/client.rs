@@ -27,6 +27,9 @@ impl BTCDClient {
         let req = self.0.build_request(&cmd, &raw_args);
         // Sends it and collects the response in `resp`
         let resp = self.0.send_request(req)?;
+        if let Some(error) = resp.error {
+            return Err(UtreexodError::JsonRpcError(jsonrpc::Error::Rpc(error)));
+        }
         Ok(serde_json::from_str::<T>(
             resp.result.unwrap_or_default().get(),
         )?)
