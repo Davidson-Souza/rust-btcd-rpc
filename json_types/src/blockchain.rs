@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetUtreexoProofResult {
     pub proofhashes: Vec<String>,
+    #[serde(rename = "rememberindexes")]
+    pub remember_indexes: Vec<String>,
     pub targethashes: Vec<String>,
+    #[serde(rename = "targetpreimages")]
+    pub target_preimages: Vec<String>,
     pub prooftargets: Vec<u64>,
     pub hex: String,
 }
