@@ -189,7 +189,7 @@ pub trait BtcdRpc {
         self.call("getblockcount", &[])
     }
     /// Broadcast a hex-encoded transaction to the network
-    fn sendrawtransaction(&self, rawtx: String) -> Result<()> {
+    fn sendrawtransaction(&self, rawtx: String) -> Result<String> {
         let rawtx = serde_json::to_value(rawtx)?;
         self.call("sendrawtransaction", &[rawtx])
     }
