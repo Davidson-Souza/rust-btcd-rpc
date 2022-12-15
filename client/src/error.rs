@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use jsonrpc::simple_http;
 #[derive(Debug)]
 pub enum UtreexodError {
@@ -7,7 +5,6 @@ pub enum UtreexodError {
     SimpleHttpError(simple_http::Error),
     DeserializationError(serde_json::Error),
     EmptyResponseFromServer,
-    Unknown(Box<dyn Error>),
 }
 
 impl From<jsonrpc::Error> for UtreexodError {
