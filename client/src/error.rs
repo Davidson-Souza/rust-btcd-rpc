@@ -1,21 +1,16 @@
-use jsonrpc::simple_http;
+use serde_json::Value;
+
 #[derive(Debug)]
 pub enum UtreexodError {
-    JsonRpcError(jsonrpc::Error),
-    SimpleHttpError(simple_http::Error),
+    JsonRpcError(Value),
+    ReqwestError(reqwest::Error),
     DeserializationError(serde_json::Error),
     EmptyResponseFromServer,
 }
 
-impl From<jsonrpc::Error> for UtreexodError {
-    fn from(error: jsonrpc::Error) -> Self {
-        UtreexodError::JsonRpcError(error)
-    }
-}
-
-impl From<simple_http::Error> for UtreexodError {
-    fn from(error: simple_http::Error) -> Self {
-        UtreexodError::SimpleHttpError(error)
+impl From<reqwest::Error> for UtreexodError {
+    fn from(error: reqwest::Error) -> Self {
+        UtreexodError::ReqwestError(error)
     }
 }
 impl From<serde_json::Error> for UtreexodError {

@@ -1,6 +1,8 @@
 pub mod client;
 pub mod error;
 pub use json_types;
+use serde::Deserialize;
+use serde_json::Value;
 /// Some RPCs requires a given block, usually as a hash. But we might only have a height.
 /// In order to save some time while programming, instead of asking for a hash and then
 /// asking what you need, this API allows asking by hash or by height, and we take care
@@ -11,7 +13,13 @@ pub enum QueryBlock {
     /// This means: "I'm referencing block whose hash is Y"
     ByHash(String),
 }
-
+#[derive(Deserialize)]
+pub(crate) struct QueryResult {
+    jsonrpc: String,
+    id: u32,
+    result: Value,
+    error: Value,
+}
 #[macro_export]
 macro_rules! impl_verbosity_bool {
     ($self: ident, $cmd: literal, $params: expr, $verbosity: ident) => {
