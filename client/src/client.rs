@@ -1,5 +1,5 @@
 use crate::error::UtreexodError;
-use crate::{impl_verbosity_bool, impl_verbosity_level};
+use crate::{impl_verbosity_bool, impl_verbosity_level, QueryResult};
 use json_types::blockchain::{GetBlockHeaderResult, GetBlockResult};
 use json_types::transaction::{BestBlock, VerboseGetRawTransactionResult};
 use json_types::{
@@ -10,43 +10,31 @@ use json_types::{general::*, VerbosityOutput};
 
 #[cfg(feature = "utreexod")]
 use json_types::blockchain::GetUtreexoProofResult;
-use jsonrpc::{self, Client};
-use serde_json::{from_value, Value};
-pub struct BTCDClient(Client);
+use serde_json::Value;
+pub struct BTCDClient(BTCDConfigs);
 
 impl BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(&self, cmd: &str, args: &[Value]) -> Result<T> {
-        let raw_args: Vec<_> = args
-            .into_iter()
-            .map(|a| from_value(a.clone()))
-            .filter(|a| a.is_ok())
-            .map(|a| a.unwrap())
-            .collect();
-
-        // Builds a request
-        let req = self.0.build_request(&cmd, &raw_args);
-        // Sends it and collects the response in `resp`
-        let resp = self.0.send_request(req)?;
-        if let Some(error) = resp.error {
-            return Err(UtreexodError::JsonRpcError(jsonrpc::Error::Rpc(error)));
+        let req_body = format!(
+            "{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"{cmd}\",\"params\":{}}}",
+            serde_json::to_string(&args)?
+        );
+        let client = reqwest::blocking::Client::new();
+        let res = client
+            .post(&self.0.host)
+            .body(req_body)
+            .basic_auth("SomeUsername", Some("CorrectHorseBattleStaple"))
+            .send()?;
+        let res = res.text()?;
+        let res = serde_json::from_str::<QueryResult>(&res)?;
+        if !res.error.is_null() {
+            return Err(UtreexodError::JsonRpcError(res.error));
         }
-        Ok(serde_json::from_str::<T>(
-            resp.result.unwrap_or_default().get(),
-        )?)
+        Ok(serde_json::from_value::<T>(res.result)?)
     }
 
     pub fn new(cfg: BTCDConfigs) -> Result<BTCDClient> {
-        let client = Client::simple_http(
-            format!(
-                "{}:{}",
-                cfg.host.expect("No hostname provided"),
-                cfg.port.unwrap_or(8332)
-            )
-            .as_str(),
-            cfg.username,
-            cfg.password,
-        )?;
-        Ok(BTCDClient(client))
+        Ok(BTCDClient(cfg))
     }
 }
 
@@ -72,7 +60,7 @@ pub trait BtcdRpc {
     ///     false,
     ///     Some("SomeUsername".into()),
     ///     Some("CorrectHorseBattleStaple".into()),
-    ///     Some("localhost".into()),
+    ///     "localhost".into(),
     ///     Some(38332),
     /// );
     ///
@@ -89,7 +77,7 @@ pub trait BtcdRpc {
     ///     false,
     ///     Some("SomeUsername".into()),
     ///     Some("CorrectHorseBattleStaple".into()),
-    ///     Some("localhost".into()),
+    ///     "localhost".into(),
     ///     Some(38332),
     /// );
     ///
@@ -126,7 +114,7 @@ pub trait BtcdRpc {
     ///     false,
     ///     Some("SomeUsername".into()),
     ///     Some("CorrectHorseBattleStaple".into()),
-    ///     Some("localhost".into()),
+    ///     "localhost".into(),
     ///     Some(38332),
     /// );
     ///
@@ -250,7 +238,7 @@ pub struct BTCDConfigs {
     tls: bool,
     username: Option<String>,
     password: Option<String>,
-    host: Option<String>,
+    host: String,
     port: Option<usize>,
 }
 
@@ -259,7 +247,7 @@ impl BTCDConfigs {
         tls: bool,
         username: Option<String>,
         password: Option<String>,
-        host: Option<String>,
+        host: String,
         port: Option<usize>,
     ) -> BTCDConfigs {
         BTCDConfigs {
@@ -274,7 +262,7 @@ impl BTCDConfigs {
         match opt {
             Options::Username(username) => self.username = Some(username),
             Options::Password(password) => self.password = Some(password),
-            Options::Hostname(hostname) => self.host = Some(hostname),
+            Options::Hostname(hostname) => self.host = hostname,
             Options::Port(port) => self.port = Some(port),
             Options::TLS(tls) => self.tls = tls,
         }
@@ -303,7 +291,7 @@ mod test {
             false,
             Some("SomeUsername".into()),
             Some("CorrectHorseBattleStaple".into()),
-            Some("localhost".into()),
+            "localhost".into(),
             Some(38332),
         );
 
@@ -319,8 +307,8 @@ mod test {
             false,
             Some("SomeUsername".into()),
             Some("CorrectHorseBattleStaple".into()),
-            Some("localhost".into()),
-            Some(38332),
+            "localhost".into(),
+            Some(80),
         );
 
         let client = BTCDClient::new(config).unwrap();
@@ -338,7 +326,7 @@ mod test {
             false,
             Some("SomeUsername".into()),
             Some("CorrectHorseBattleStaple".into()),
-            Some("localhost".into()),
+            "localhost".into(),
             Some(38332),
         );
 
@@ -365,7 +353,7 @@ mod test {
             false,
             Some("SomeUsername".into()),
             Some("CorrectHorseBattleStaple".into()),
-            Some("localhost".into()),
+            "localhost".into(),
             Some(38332),
         );
 
@@ -382,14 +370,14 @@ mod test {
             false,
             Some("SomeUsername".into()),
             Some("CorrectHorseBattleStaple".into()),
-            Some("localhost".into()),
+            "localhost".into(),
             Some(38332),
         );
 
         assert_eq!(config.tls, false);
         assert_eq!(config.username, Some("SomeUsername".into()));
         assert_eq!(config.password, Some("CorrectHorseBattleStaple".into()));
-        assert_eq!(config.host, Some("localhost".into()));
+        assert_eq!(config.host, "localhost");
         assert_eq!(config.port, Some(38332));
     }
 }
