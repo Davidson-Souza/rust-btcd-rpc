@@ -109,7 +109,11 @@ pub trait BtcdRpc {
     /// // This is a signet block
     /// // assert!(client.getblockhash(0).unwrap(), String::from("00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6"));
     /// ```
-    fn getutreexoproof(&self, hash: String, verbosity: bool) -> Result<VerbosityOutput<GetUtreexoProofResult>> {
+    fn getutreexoproof(
+        &self,
+        hash: String,
+        verbosity: bool,
+    ) -> Result<VerbosityOutput<GetUtreexoProofResult>> {
         let hash = Value::from(hash);
         impl_verbosity_level!(self, "getutreexoproof", hash, verbosity)
     }
@@ -224,6 +228,12 @@ pub trait BtcdRpc {
     ) -> Result<VerbosityOutput<GetBlockHeaderResult>> {
         let hash = serde_json::to_value(hash)?;
         impl_verbosity_bool!(self, "getblockheader", hash, verbosity)
+    }
+    /// Returns a batch of headers
+    fn getheaders(&self, locator: Vec<String>, stop_hash: String) -> Result<Vec<String>> {
+        let locator = serde_json::to_value(locator)?;
+        let stop_hash = serde_json::to_value(stop_hash)?;
+        self.call("getheaders", &[locator, stop_hash])
     }
 }
 impl BtcdRpc for BTCDClient {
@@ -349,7 +359,7 @@ mod test {
     #[cfg(feature = "utreexod")]
     #[test]
     fn test_getutreexoproof() {
-        use super::{BTCDClient, BtcdRpc, BTCDConfigs};
+        use super::{BTCDClient, BTCDConfigs, BtcdRpc};
 
         let config = BTCDConfigs::new(
             false,
