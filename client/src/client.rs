@@ -23,6 +23,7 @@ impl BTCDClient {
         let res = client
             .post(&self.0.host)
             .body(req_body)
+            .header(reqwest::header::CONNECTION, "Keep-Alive")
             .basic_auth("SomeUsername", Some("CorrectHorseBattleStaple"))
             .send()?;
         let res = res.text()?;
