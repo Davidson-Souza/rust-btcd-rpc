@@ -10,8 +10,9 @@ use json_types::{general::*, VerbosityOutput};
 
 #[cfg(feature = "utreexod")]
 use json_types::blockchain::GetUtreexoProofResult;
+use reqwest::blocking::Client;
 use serde_json::Value;
-pub struct BTCDClient(BTCDConfigs);
+pub struct BTCDClient(BTCDConfigs, Client);
 
 impl BTCDClient {
     fn call<T: for<'a> serde::de::Deserialize<'a>>(&self, cmd: &str, args: &[Value]) -> Result<T> {
@@ -19,14 +20,17 @@ impl BTCDClient {
             "{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"{cmd}\",\"params\":{}}}",
             serde_json::to_string(&args)?
         );
-        let client = reqwest::blocking::Client::new();
-        let res = client
+
+        let mut req = self
+            .1
             .post(&self.0.host)
             .body(req_body)
-            .header(reqwest::header::CONNECTION, "Keep-Alive")
-            .basic_auth("SomeUsername", Some("CorrectHorseBattleStaple"))
-            .send()?;
-        let res = res.text()?;
+            .header(reqwest::header::CONNECTION, "Keep-Alive");
+        if let Some(username) = &self.0.username {
+            req = req.basic_auth(username, self.0.password.to_owned());
+        }
+
+        let res = req.send()?.text()?;
         let res = serde_json::from_str::<QueryResult>(&res)?;
         if !res.error.is_null() {
             return Err(UtreexodError::JsonRpcError(res.error));
@@ -35,7 +39,11 @@ impl BTCDClient {
     }
 
     pub fn new(cfg: BTCDConfigs) -> Result<BTCDClient> {
-        Ok(BTCDClient(cfg))
+        let client = reqwest::blocking::Client::builder()
+            .danger_accept_invalid_certs(true)
+            .build()
+            .unwrap();
+        Ok(BTCDClient(cfg, client))
     }
 }
 
@@ -234,7 +242,7 @@ impl BtcdRpc for BTCDClient {
         self.call(command, args)
     }
 }
-
+#[derive(Debug, Clone)]
 pub struct BTCDConfigs {
     tls: bool,
     username: Option<String>,
