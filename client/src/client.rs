@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::error::UtreexodError;
 use crate::{impl_verbosity_bool, impl_verbosity_level, QueryResult};
 use json_types::blockchain::{GetBlockHeaderResult, GetBlockResult};
@@ -41,6 +43,7 @@ impl BTCDClient {
     pub fn new(cfg: BTCDConfigs) -> Result<BTCDClient> {
         let client = reqwest::blocking::Client::builder()
             .danger_accept_invalid_certs(true)
+            .tcp_keepalive(Some(Duration::from_secs(3600)))
             .build()
             .unwrap();
         Ok(BTCDClient(cfg, client))
