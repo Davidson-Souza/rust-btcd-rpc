@@ -18,6 +18,7 @@ pub(crate) struct QueryResult {
     jsonrpc: String,
     id: u32,
     result: Value,
+    #[serde(default)]
     error: Value,
 }
 #[macro_export]
